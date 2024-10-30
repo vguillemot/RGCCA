@@ -487,9 +487,14 @@ rgcca <- function(blocks, connection = NULL, tau = 1, ncomp = 1,
   gcca_args[["blocks"]] <- blocks
   gcca_args[["disjunction"]] <- opt$disjunction
   gcca_args[[opt$param]] <- rgcca_args[[opt$param]]
-  gcca_args <- modifyList(gcca_args, opt$supplementary_parameters)
-  
   func_out <- do.call(rgcca_outer_loop, gcca_args)
+
+  # if (method == "netsgcca") {
+  #   gcca_args <- modifyList(gcca_args, rgcca_args[c("lambda", "graph_laplacians")])
+  # }
+  # func_out <- do.call(opt$gcca, gcca_args)
+  # gcca_args <- modifyList(gcca_args, opt$supplementary_parameters)
+  # func_out <- do.call(opt$gcca, gcca_args)
 
   ### Format the output
   func_out <- format_output(func_out, rgcca_args, opt, blocks)

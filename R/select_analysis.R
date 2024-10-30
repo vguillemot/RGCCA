@@ -464,6 +464,14 @@ select_analysis <- function(rgcca_args, blocks) {
 
   rgcca_args[[param]] <- penalty
 
+  ### FIX HERE #### -> netsgcca needs other parameters
+  if (method == "netsgcca") {
+    param_list <- list(lambda = lambda, graph_laplacians = graph_laplacians)
+  } else {
+    param_list <- list()
+  }
+  ### end ###
+
   rgcca_args <- modifyList(rgcca_args, list(
     ncomp = ncomp,
     scheme = scheme,
@@ -477,8 +485,8 @@ select_analysis <- function(rgcca_args, blocks) {
   return(list(
     rgcca_args = rgcca_args,
     opt = list(
-      gcca = gcca,
-      supplementary_parameters = param_list,
+      # gcca = gcca,
+      # supplementary_parameters = param_list,
       param = param
     )
   ))
