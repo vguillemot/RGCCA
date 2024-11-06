@@ -13,3 +13,10 @@ block_update.dual_block <- function(x, grad) {
   x$alpha <- grad
   return(block_project(x))
 }
+
+#' @export
+block_update.graphnet_block <- function(x, grad) {
+  x$a <- pm(t(x$x), grad, na.rm = x$na.rm)  +
+    x$lambda * x$graph_laplacian %*% x$a
+  return(block_project(x))
+}
