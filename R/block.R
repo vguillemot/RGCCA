@@ -54,9 +54,9 @@ new_graphnet_block <- function(x, j, sparsity, lambda, graph_laplacians,
 
 ### Utility method to choose the adequate class
 create_block <- function(x, j, bias, na.rm, tau, sparsity, lambda,
-  graph_laplacians, tol) {
-  if (!is.null(graph_laplacians)) {
-    res <- new_graphnet_block(x, j, sparsity, lambda, graph_laplacians, tol,
+  graph_laplacian, tol) {
+  if (!is.null(graph_laplacian)) {
+    res <- new_graphnet_block(x, j, sparsity, lambda, graph_laplacian, tol,
       bias = bias, na.rm = na.rm)
   } else if (sparsity < 1) {
     res <- new_sparse_block(x, j, sparsity, tol, bias = bias, na.rm = na.rm)
