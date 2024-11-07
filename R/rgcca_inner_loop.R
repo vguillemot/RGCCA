@@ -18,7 +18,7 @@ rgcca_inner_loop <- function(A, C, g, dg, tau = rep(1, length(A)),
   ### Initialization
   block_objects <- lapply(seq_along(A), function(j) {
     create_block(A[[j]], j, bias, na.rm, tau[j], sparsity[j], lambda[j], 
-      graph_laplacians[j], tol)
+      graph_laplacians[[j]], tol)
   })
 
   block_objects <- lapply(block_objects, block_init, init = init)

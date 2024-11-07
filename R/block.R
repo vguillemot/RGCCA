@@ -37,11 +37,12 @@ new_dual_regularized_block <- function(x, j, tau, ...) {
   )
 }
 
-new_sparse_block <- function(x, j, sparsity, tol = 1e-08, ...) {
+new_sparse_block <- function(x, j, sparsity, tol = 1e-08, ...,
+  class=character()) {
   const <- sqrt(NCOL(x)) * sparsity
   new_block(
     x, j, sparsity = sparsity, const = const,
-    tol = tol, ..., class = "sparse_block"
+    tol = tol, ..., class = c(class, "sparse_block")
   )
 }
 
