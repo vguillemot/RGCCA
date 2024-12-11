@@ -20,6 +20,6 @@ block_update.graphnet_block <- function(x, grad) {
     pm(t(x$x), grad, na.rm = x$na.rm)  +
     x$lambda * x$graph_laplacian %*% x$a
   ) # if graph_laplacian is a sparse matrix
-  # it a necessary to cast a as a standard matrix for rggca_inner_loop
+  # it a necessary to cast the result as a dense matrix
   return(block_project(x))
 }
