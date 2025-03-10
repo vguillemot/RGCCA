@@ -54,3 +54,19 @@ block_project.sparse_block <- function(x) {
   x$Y <- pm(x$x, x$a, na.rm = x$na.rm)
   return(x)
 }
+
+#' @export
+block_project.graphnet_block <- function(x) {
+  if (any(x$a != 0)) {
+    x$a_L1 <- projL1(x$a, x$const)
+  }
+  
+  if (any(x$a != 0)) {
+    x$a_L2 <- x$a / norm(x$a, type = "2")
+  }
+  
+  x$a <- x$a_L1 + x$a_L2
+  
+  x$Y <- pm(x$x, x$a, na.rm = x$na.rm)
+  return(x)
+}
