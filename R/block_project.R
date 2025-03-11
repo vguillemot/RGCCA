@@ -58,7 +58,7 @@ block_project.sparse_block <- function(x) {
 #' @export
 block_project.graphnet_block <- function(x) {
   if (any(x$a != 0)) {
-    x$a_L1 <- projL1(x$a, x$const)
+    x$a_L1 <- projL1(x$a, x$const)$x
   }
   
   if (any(x$a != 0)) {

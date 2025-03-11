@@ -99,7 +99,7 @@ rgcca_outer_loop <- function(blocks, connection = 1 - diag(length(blocks)),
                                                 sparsity = sparsity[n, ],
                                                 lambda = lambda,
                                                 graph_laplacians = graph_laplacians,
-                                                init = init, bias = bias, tol = tol,
+                                                init = init, bias = bias,
                                                 verbose = verbose, na.rm = na.rm,
                                                 n_iter_max = n_iter_max
       )

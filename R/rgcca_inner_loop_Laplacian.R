@@ -29,7 +29,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   crit <- NULL
   crit_old <- sum(C * g(crossprod(Y) / N))
   a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
-  mu    <- 1
+  mu    <- 4
   
   repeat{  
     iter_inner <- 1
@@ -63,7 +63,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
         break
       }
       
-      print("MU UPDATE")
+      print(stopping_criteria_inner)
       crit_old <- crit[iter_inner]
       a_old_inner <- a
       iter_inner <- iter_inner + 1
@@ -75,6 +75,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
       break
     }
     
+    print("MU UPDATE")
     crit_old <- crit[iter_inner]
     a_old_outer <- a_old_inner <- a
     iter_outer <- iter_outer + 1
