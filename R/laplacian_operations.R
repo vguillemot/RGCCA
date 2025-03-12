@@ -11,9 +11,9 @@ lap_decomp <- function(L, lambda, k=NULL, woodburry=TRUE) {
   # Keeping the rank-k approximation
   V = V[,1:k]
   Delta = Delta[1:k]
-  Lk = V %*% diag(Delta) %*% t(V)
+  #Lk = V %*% diag(Delta) %*% t(V)
 
-  return(list(list(V=V, Delta_inv=1/Delta, L=Lk, woodburry=woodburry)))
+  return(list(list(V=V, Delta_inv=1/Delta, L=L, woodburry=woodburry)))
 }
 
 lap_inv <- function(L, mu) {
