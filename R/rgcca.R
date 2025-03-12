@@ -430,11 +430,12 @@ rgcca <- function(blocks, connection = NULL, tau = 1, ncomp = 1,
                   bias = TRUE, tol = 1e-08, verbose = FALSE,
                   scale_block = "inertia", method = "rgcca",
                   lambda = 0, graph_laplacians = NULL,
+                  mu_init=1, tol_inner=1e-04, tol_outer=1e-08,
                   sparsity = 1, response = NULL,
                   superblock = FALSE,
                   NA_method = "na.ignore", quiet = TRUE,
                   n_iter_max = 1000, comp_orth = TRUE,
-                  A = NULL, C = NULL) {
+                  A = NULL, C = NULL, ranks=NULL, woodburry=TRUE) {
   # Check for deprecated arguments
   if (!missing(A)) {
     warning("Argument A is deprecated, use blocks instead.")
@@ -479,11 +480,19 @@ rgcca <- function(blocks, connection = NULL, tau = 1, ncomp = 1,
     )
   }
 
+  #Decompose laplacians for later Woodburry
+  if (!is.null(graph_laplacians)) {
+    for (i in seq_along(rgcca_args$graph_laplacians)) {
+      rgcca_args$graph_laplacians[i] = lap_decomp(graph_laplacians[[i]],
+          lambda[i], k=ranks, woodburry=woodburry)
+    }
+  }
+
   ### Call the gcca function
   gcca_args <- rgcca_args[c(
     "connection", "ncomp", "scheme", "init", "bias", "tol",
     "verbose", "superblock", "response", "n_iter_max", "comp_orth",
-    "lambda", "graph_laplacians" # for netSGCCA
+    "lambda", "graph_laplacians", "mu_init", "tol_inner", "tol_outer" # for netSGCCA
   )]
   gcca_args[["na.rm"]] <- na.rm
   gcca_args[["blocks"]] <- blocks

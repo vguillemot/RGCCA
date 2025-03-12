@@ -5,6 +5,7 @@ rgcca_outer_loop <- function(blocks, connection = 1 - diag(length(blocks)),
                              ncomp = rep(1, length(blocks)),
                              lambda = rep(0, length(blocks)),
                              graph_laplacians = NULL,
+                             mu_init=1, tol_inner=1e-04, tol_outer=1e-08,
                              scheme = "centroid",
                              init = "svd", bias = TRUE, tol = 1e-08,
                              verbose = TRUE,
@@ -101,7 +102,10 @@ rgcca_outer_loop <- function(blocks, connection = 1 - diag(length(blocks)),
                                                 graph_laplacians = graph_laplacians,
                                                 init = init, bias = bias,
                                                 verbose = verbose, na.rm = na.rm,
-                                                n_iter_max = n_iter_max
+                                                n_iter_max = n_iter_max,
+                                                mu_init=mu_init,
+                                                tol_inner=tol_inner,
+                                                tol_outer=tol_outer
       )
     } else {
       gcca_result <- rgcca_inner_loop(R, connection, g, dg,

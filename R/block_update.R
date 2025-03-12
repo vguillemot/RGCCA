@@ -18,9 +18,10 @@ block_update.dual_block <- function(x, grad, mu=NULL) {
 block_update.graphnet_block <- function(x, grad, mu) {
   a_grad = pm(t(x$x), grad, na.rm = x$na.rm)
   x$a <- as.matrix(
-    ginv(2*mu*diag(length(x$a)) + x$lambda * x$graph_laplacian) %*% (a_grad + mu*block_project(x)$a)
+    #solve(2*mu*diag(length(x$a)) + x$lambda * x$graph_laplacian) %*% (a_grad + mu*block_project(x)$a)
+    lap_inv(x$graph_laplacian, 2*mu) %*% (a_grad + mu*block_project(x)$a)
   ) # if graph_laplacian is a sparse matrix
-  # it a necessary to cast the result as a dense matrix
+  # it necessary to cast the result as a dense matrix
   x$Y <- pm(x$x, x$a, na.rm = x$na.rm)
   return(x)
 }

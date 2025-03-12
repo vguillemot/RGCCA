@@ -3,6 +3,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
                                        lambda = rep(0, length(A)),
                                        graph_laplacians = NULL,
                                        verbose = FALSE, init = "svd", bias = TRUE,
+                                       mu_init=1,
                                        tol_inner = 1e-04, tol_outer = 1e-08, na.rm = TRUE, n_iter_max = 1000) {
   if (!is.numeric(tau)) {
     # From Schafer and Strimmer, 2005
@@ -29,7 +30,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   crit <- NULL
   crit_old <- sum(C * g(crossprod(Y) / N))
   a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
-  mu    <- 4
+  mu <- mu_init
   
   repeat{  
     iter_inner <- 1
@@ -59,7 +60,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
       a <- lapply(block_objects, "[[", "a")
       stopping_criteria_inner <- crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_inner, FALSE, FALSE))
       
-      print(paste("stop inner:", stopping_criteria_inner))
+      if (verbose) print(paste("stop inner:", stopping_criteria_inner))
       if (any(stopping_criteria_inner < tol_inner) || (iter_inner > n_iter_max)) {
         break
       }
@@ -71,20 +72,17 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
     
     stopping_criteria_outer <- crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_outer, FALSE, FALSE))
 
-    flag1 = (stopping_criteria_outer < tol_outer)
-    flag2 = (iter_outer > n_iter_max)
-    
     if (any(stopping_criteria_outer < tol_outer) || (iter_outer > n_iter_max)) {
       #if (flag1) print("tolerance")
       #if (flag2) print("iterations")
       break
     }
     
-    print(paste("MU UPDATE:", mu))
     crit_old <- crit[iter_inner]
     a_old_outer <- a_old_inner <- a
     iter_outer <- iter_outer + 1
     mu <- 2*mu + 1
+    if (verbose) print(paste("MU UPDATE:", mu))
   }
   
   if (iter_inner > n_iter_max) {
@@ -102,10 +100,10 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   }
   
   if (verbose) {
-    if (iter <= n_iter_max) {
+    if (iter_outer <= n_iter_max) {
       message(
         "The RGCCA algorithm converged to a stationary point after ",
-        iter - 1, " iterations \n"
+        iter_outer - 1, " iterations \n"
       )
     }
     plot(crit, xlab = "iteration", ylab = "criteria")
