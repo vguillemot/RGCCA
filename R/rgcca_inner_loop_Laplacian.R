@@ -59,23 +59,28 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
       a <- lapply(block_objects, "[[", "a")
       stopping_criteria_inner <- crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_inner, FALSE, FALSE))
       
+      print(paste("stop inner:", stopping_criteria_inner))
       if (any(stopping_criteria_inner < tol_inner) || (iter_inner > n_iter_max)) {
         break
       }
       
-      print(stopping_criteria_inner)
       crit_old <- crit[iter_inner]
       a_old_inner <- a
       iter_inner <- iter_inner + 1
     }
     
     stopping_criteria_outer <- crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_outer, FALSE, FALSE))
+
+    flag1 = (stopping_criteria_outer < tol_outer)
+    flag2 = (iter_outer > n_iter_max)
     
     if (any(stopping_criteria_outer < tol_outer) || (iter_outer > n_iter_max)) {
+      #if (flag1) print("tolerance")
+      #if (flag2) print("iterations")
       break
     }
     
-    print("MU UPDATE")
+    print(paste("MU UPDATE:", mu))
     crit_old <- crit[iter_inner]
     a_old_outer <- a_old_inner <- a
     iter_outer <- iter_outer + 1
