@@ -31,3 +31,5 @@ block_postprocess.sparse_block <- function(x, ctrl) {
   }
   NextMethod()
 }
+
+block_postprocess.graphnet_block <- block_postprocess.block
