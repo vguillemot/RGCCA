@@ -24,12 +24,12 @@ Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> LDLTsolver_new() 
 
 // [[Rcpp::export()]]
 void LDLTsolver_compute(Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> ptr,
-        Eigen::SparseMatrix<double> L) {
+        const Eigen::SparseMatrix<double>& L) {
     ptr->compute(L);
 }
 
 // [[Rcpp::export()]]
 Eigen::VectorXd LDLTsolver_solve(Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> ptr,
-        Eigen::VectorXd b) {
+        const Eigen::VectorXd& b) {
     return ptr->solve<Eigen::VectorXd>(b);
 }
