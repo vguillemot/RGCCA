@@ -17,20 +17,15 @@ block_update.dual_block <- function(x, grad, mu=NULL) {
 #' @export
 block_update.graphnet_block <- function(x, grad, mu) {
   a_grad = pm(t(x$x), grad, na.rm = x$na.rm)
-  if (x$graph_laplacian$woodburry) {
     if (is.null(x$mu) || mu != x$mu) {
-      x$mu <- mu
-      x$inv <- lap_inv(x$graph_laplacian, 2*x$mu)
+      x$mu = mu
+      #x$graph_laplacian$LDLTsolver$compute(2*mu*diag(length(x$a)) + x$graph_laplacian$L)
+      #.Call("LDLTsolver_compute", x$graph_laplacian$solver@pointer, 2*mu*diag(length(x$a)) + x$graph_laplacian$L)
+      LDLTsolver_compute(x$graph_laplacian$solver@pointer, 2*mu*diag(length(x$a)) + x$graph_laplacian$L)
     }
-    x$a <- as.matrix(
-      x$inv %*% (a_grad + mu*block_project(x)$a)
-    ) # if graph_laplacian is a sparse matrix
-    # it necessary to cast the result as a dense matrix
-  } else {
-    A <- 2*mu*diag(length(x$a)) + x$graph_laplacian$L 
-    b <- a_grad + mu*block_project(x)$a
-    x$a <- rcpp_solve(A, b)
-  }
+  #x$a <- x$graph_laplacian$LDLTsolver$solve(a_grad + mu*block_projet(x)$a)
+  #.Call("LDLTsolver_solve", x$graph_laplacian$solver@pointer, a_grad + mu*block_project(x))
+  x$a <- LDLTsolver_solve(x$graph_laplacian$solver@pointer, a_grad + mu*block_project(x)$a)
   x$Y <- pm(x$x, x$a, na.rm = x$na.rm)
   return(x)
 }

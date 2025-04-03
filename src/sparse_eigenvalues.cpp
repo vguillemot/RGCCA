@@ -1,16 +1,35 @@
-#define ARMA_USE_SUPERLU 1
-#include <RcppArmadillo.h>
-// [[Rcpp::depends(RcppArmadillo)]]
+#include <RcppEigen.h>
+// [[Rcpp::depends(RcppEigen)]]
 
-// [[Rcpp::export]]
-Rcpp::List rcpp_sparse_eigen(arma::sp_mat X, int rank) {
-    arma::mat eigvec;
-    arma::vec eigval;
-    arma::eigs_sym(eigval, eigvec, X, rank);
-    return Rcpp::List::create(Rcpp::Named("s")=eigval, Rcpp::Named("v")=eigvec);
+typedef Eigen::SparseMatrix<int> laplacian;
+typedef Eigen::SimplicialLDLT<laplacian> LDLTsolver;
+
+//RCPP_MODULE(solver_module) {
+
+    //Rcpp::class_<LDLTsolver>( "SimplicialLDLT" )
+
+    //.constructor()
+    
+    //.method("compute", &LDLTsolver::compute)
+    //.method("solve", &LDLTsolver::solve<laplacian, double>)
+    //;
+//}
+
+// [[Rcpp::export()]]
+Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> LDLTsolver_new() {
+    Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>>
+        ptr (new Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>(), true);
+    return ptr;
 }
 
-// [[Rcpp::export]]
-//arma::vec rcpp_solve(arma::sp_mat A, arma::vec b) {
-    //return arma::spsolve(A, b);
-//}
+// [[Rcpp::export()]]
+void LDLTsolver_compute(Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> ptr,
+        Eigen::SparseMatrix<double> L) {
+    ptr->compute(L);
+}
+
+// [[Rcpp::export()]]
+Eigen::VectorXd LDLTsolver_solve(Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> ptr,
+        Eigen::VectorXd b) {
+    return ptr->solve<Eigen::VectorXd>(b);
+}

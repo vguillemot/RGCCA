@@ -480,11 +480,12 @@ rgcca <- function(blocks, connection = NULL, tau = 1, ncomp = 1,
     )
   }
 
-  #Decompose laplacians for later Woodburry
   if (!is.null(graph_laplacians)) {
     for (i in seq_along(rgcca_args$graph_laplacians)) {
-      rgcca_args$graph_laplacians[i] = lap_decomp(graph_laplacians[[i]],
-          lambda[i], k=ranks, woodburry=woodburry)
+      if (!is.null(rgcca_args$graph_laplacians[[i]])) {
+        rgcca_args$graph_laplacians[[i]] = create_laplacian(rgcca_args$graph_laplacians[[i]],
+          rgcca_args$lambda[i])
+      }
     }
   }
 

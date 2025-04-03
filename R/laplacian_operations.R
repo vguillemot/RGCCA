@@ -1,35 +1,25 @@
-lap_decomp <- function(L, lambda, k=NULL, woodburry=TRUE) {
-  if (is.null(L)) return(list(NULL))
-  if (is.null(k)) k = ncol(L) - 1
+# Defining a class to wrap around the pointer to LDLTsolver
+# boilerplate taken from the book "seamless R and C++ integration..."
+setClass("LDLTsolver", slots=c(pointer="externalptr"))
 
-  L = lambda*L
-  if (woodburry || k != ncol(L) - 1) {
-      #Leig = eigen(L)
-      Leig = rcpp_sparse_eigen(lambda*L, k)
-      # ordering eigenvalues by magnitude
-      #order_value = order(abs(Leig$values), decreasing=TRUE)
-      #V = Leig$vectors[,order_value]
-      #Delta = Leig$values[order_value]
-      # Keeping the rank-k approximation
-      #V = V[,1:k]
-      #Delta = Delta[1:k]
-      Delta = c(Leig$s)
-      Delta_inv = 1/Delta
-      V = Leig$v
-      L = V %*% diag(Delta) %*% t(V)
-  } else {
-      V = NULL
-      Delta_inv = NULL
-  }
-
-  return(list(list(V=V, Delta_inv=Delta_inv, L=L, woodburry=woodburry)))
+LDLTsolver_method <- function(name) {
+    paste("LDLTsolver", name, sep="_")
 }
 
-lap_inv <- function(L, mu) {
-  if (L$woodburry) {
-    inv = (diag(nrow(L$V)) - L$V %*% diag(1/(mu*L$Delta_inv + 1)) %*% t(L$V))/mu
-  } else {
-    inv = solve(mu*diag(ncol(L$L)) + L$L)
-  }
-  return(inv)
+setMethod("$", "LDLTsolver", function(x, name) {
+    function(...) {
+       print(name)
+      .Call(LDLTsolver_method(name), x@pointer, ...)
+    }
+})
+
+setMethod("initialize", "LDLTsolver", function(.Object, ...) {
+    #.Object@pointer <- .Call(LDLTsolver_method("new"), ...)
+    .Object@pointer <- LDLTsolver_new()
+    .Object
+})
+
+create_laplacian = function(L, lambda, ranks=NULL) {
+    structure(list(L=lambda*L, solver=new("LDLTsolver")),
+        class="laplacian")
 }
