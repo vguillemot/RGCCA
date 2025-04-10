@@ -40,7 +40,12 @@ Imports:
     parallel,
     pbapply,
     rlang,
-    stats
+    stats,
+    Rcpp,
+    RcppEigen
+LinkingTo:
+    Rcpp,
+    RcppEigen
 Suggests:
     devtools,
     FactoMineR,
@@ -50,6 +55,7 @@ Suggests:
     rticles,
     testthat,
     vdiffr
+SystemRequirements: C++11
 VignetteBuilder:
     knitr
 LazyData: true
