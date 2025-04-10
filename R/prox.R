@@ -1,13 +1,11 @@
 #' L1-, L2- or LG- proximal mapping of a vector of numerics
 #'
 #' USAGE !!!!
-#'
 #' @param vec, vector of numeric value
 #' @param lambda, proximal mapping parameter
 #' @param grp, vector describing the groups
 #'
 #' @return the L1-, L2- or LG- proximal mapping of a vector of numerics
-#' @export
 #'
 #' @examples
 #' x <- c(-0.1, 1, 0.5)
@@ -18,7 +16,9 @@
 #' proxLG(x, lamb, c(1, 2, 3)) # = (0, 0.5, 0)
 #' proxLG(x, lamb, c(1, 1, 1)) # ~= (-0.1, 0.6, 0.3)
 #' proxLG(x, lamb, g) # ~= (-0.1, 0.5, 0)
+#' @name prox
 NULL
+
 #' @rdname prox
 #' @export
 proxL1 <- function(vec, lambda) {

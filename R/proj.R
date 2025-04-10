@@ -6,7 +6,6 @@
 #' @param OrthSpace, matrix defining the orthogonal space
 #'
 #' @return the L1-, L2-, L1L2- or LG- projection projection of a vector of numerics
-#' @export
 #'
 #' @examples
 #' x <- c(-0.1, 1, 0.5)
@@ -19,6 +18,7 @@
 #' projLG(vec = x, rds = r, grp = g)$x # ~= (-0.1, 0.7, 0.2)
 #' projLGL2(vec = x, rds = r, grp = g)$x # ~= (-0.1, 1.0, 0)
 #' projOrth(vec = x, OrthSpace = M)$x # = (-0.55, 0.55, 0.50)
+#' @name proj
 NULL
 
 #' @rdname proj

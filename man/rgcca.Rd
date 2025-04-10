@@ -18,7 +18,10 @@ rgcca(
   scale_block = "inertia",
   method = "rgcca",
   lambda = 0,
-  graph_laplacians = NA,
+  graph_laplacians = NULL,
+  mu_init = 1,
+  tol_inner = 1e-04,
+  tol_outer = 1e-08,
   sparsity = 1,
   response = NULL,
   superblock = FALSE,
@@ -27,7 +30,9 @@ rgcca(
   n_iter_max = 1000,
   comp_orth = TRUE,
   A = NULL,
-  C = NULL
+  C = NULL,
+  ranks = NULL,
+  woodburry = TRUE
 )
 }
 \arguments{
