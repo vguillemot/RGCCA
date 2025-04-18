@@ -2,14 +2,14 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 LDLTsolver_new <- function() {
-    .Call('_RGCCA_LDLTsolver_new', PACKAGE = 'RGCCA')
+    .Call(`_RGCCA_LDLTsolver_new`)
 }
 
 LDLTsolver_compute <- function(ptr, L) {
-    invisible(.Call('_RGCCA_LDLTsolver_compute', PACKAGE = 'RGCCA', ptr, L))
+    invisible(.Call(`_RGCCA_LDLTsolver_compute`, ptr, L))
 }
 
 LDLTsolver_solve <- function(ptr, b) {
-    .Call('_RGCCA_LDLTsolver_solve', PACKAGE = 'RGCCA', ptr, b)
+    .Call(`_RGCCA_LDLTsolver_solve`, ptr, b)
 }
 

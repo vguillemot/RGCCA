@@ -425,6 +425,8 @@
 #' \code{\link[RGCCA]{rgcca_cv}},
 #' \code{\link[RGCCA]{rgcca_permutation}}
 #' \code{\link[RGCCA]{rgcca_predict}}
+#' @useDynLib RGCCA, .registration = TRUE
+#' @importFrom Rcpp evalCpp
 rgcca <- function(blocks, connection = NULL, tau = 1, ncomp = 1,
                   scheme = "factorial", scale = TRUE, init = "svd",
                   bias = TRUE, tol = 1e-08, verbose = FALSE,
