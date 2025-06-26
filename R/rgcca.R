@@ -437,7 +437,7 @@ rgcca <- function(blocks, connection = NULL, tau = 1, ncomp = 1,
                   superblock = FALSE,
                   NA_method = "na.ignore", quiet = TRUE,
                   n_iter_max = 1000, comp_orth = TRUE,
-                  A = NULL, C = NULL, ranks=NULL, woodburry=TRUE) {
+                  A = NULL, C = NULL) {
   # Check for deprecated arguments
   if (!missing(A)) {
     warning("Argument A is deprecated, use blocks instead.")
@@ -485,8 +485,9 @@ rgcca <- function(blocks, connection = NULL, tau = 1, ncomp = 1,
   if (!is.null(graph_laplacians)) {
     for (i in seq_along(rgcca_args$graph_laplacians)) {
       if (!is.null(rgcca_args$graph_laplacians[[i]])) {
-        rgcca_args$graph_laplacians[[i]] = create_laplacian(rgcca_args$graph_laplacians[[i]],
-          rgcca_args$lambda[i])
+        rgcca_args$graph_laplacians[[i]] = create_laplacian(
+          rgcca_args$graph_laplacians[[i]], rgcca_args$lambda[i]
+        )
       }
     }
   }
