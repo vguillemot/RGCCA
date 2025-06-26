@@ -68,9 +68,16 @@ get_rgcca_args <- function(object, default_args = list()) {
     )) {
       check_boolean(i, rgcca_args[[i]])
     }
-    # deactivated for now because it makes standard S/RGCCA bug
-    #rgcca_args$graph_laplacians <- check_laplacians(rgcca_args$graph_laplacians,
-      #rgcca_args$blocks)
+
+    if (!is.null(rgcca_args$graph_laplacians)) {
+      rgcca_args$graph_laplacians <- check_laplacians(
+        rgcca_args$graph_laplacians,
+        rgcca_args$blocks
+      )
+    }
+    if(all(sapply(rgcca_args$graph_laplacians, is.null))) {
+        rgcca_args["graph_laplacians"] <- list(NULL)
+    }
 
     rgcca_args$tau <- elongate_arg(rgcca_args$tau, rgcca_args$blocks)
     rgcca_args$ncomp <- elongate_arg(rgcca_args$ncomp, rgcca_args$blocks)

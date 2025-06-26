@@ -450,17 +450,37 @@ is.sparseMatrix <- function(x) is(x, 'sparseMatrix')
 check_matrix <- function(x) is.matrix(x) || is.sparseMatrix(x)
 
 check_laplacians <- function(laplacians, blocks) {
-  if (is.null(laplacians) || all(sapply(laplacians, is.null))) {
-    return(NULL)
-  }
   if (!is.list(laplacians) || (length(laplacians)!=length(blocks))) {
       stop_rgcca("graph_laplacians should be a list",
         "with as many elements as blocks")
   }
-  lap_not_null = laplacians[!sapply(laplacians, is.null)]
-  if (!all(sapply(lap_not_null, check_matrix))) {
-    stop_rgcca("all non NULL elements of graph_laplacians",
-      "should be either regular or sparse matrices")
+  laplacians[is.na(laplacians)] <- list(NULL)
+  #lap_not_null = laplacians[!sapply(laplacians, is.null)]
+  #if (!all(sapply(lap_not_null, check_matrix))) {
+    #stop_rgcca("all non NULL elements of graph_laplacians",
+      #"should be either regular or sparse matrices")
+  #}
+  for (i in seq_along(laplacians)) {
+      if (!is.null(laplacians[[i]])) {
+          if (!check_matrix(laplacians[[i]])){
+            stop_rgcca("all non NULL elements of graph_laplacians",
+              "should be either regular or sparse matrices")
+          }
+          if (!is.sparseMatrix(laplacians[[i]])) {
+              stop_rgcca("dense laplacians are not yet supported")
+          }
+          if (class(laplacians[[i]])=="ddiMatrix") {
+              laplacians[[i]] <- as(laplacians[[i]], "dgCMatrix")
+          }
+          if (ncol(laplacians[[i]])!=nrow(laplacians[[i]])) {
+              stop_rgcca("every laplacian should be a square matrix")
+          }
+          if(ncol(laplacians[[i]])!=ncol(blocks[[i]])) {
+              print(ncol(laplacians[[i]]))
+              print(ncol(blocks[[i]]))
+              stop_rgcca("Laplacians must have the same number of columns as their corresponding blocks")
+          }
+      }
   }
   return(laplacians)
 }
