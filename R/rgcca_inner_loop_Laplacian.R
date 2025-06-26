@@ -4,7 +4,8 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
                                        graph_laplacians = NULL,
                                        verbose = FALSE, init = "svd", bias = TRUE,
                                        mu_init=1,
-                                       tol_inner = 1e-04, tol_outer = 1e-08, na.rm = TRUE, n_iter_max = 1000) {
+                                       tol_inner = 1e-04, tol_outer = 1e-08,
+                                       na.rm = TRUE, n_iter_max = 1000) {
   if (!is.numeric(tau)) {
     # From Schafer and Strimmer, 2005
     tau <- vapply(A, tau.estimate, na.rm = na.rm, FUN.VALUE = 1.0)
@@ -27,6 +28,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   N <- block_objects[[1]]$N
   
   iter_outer <- 1
+  iter_total <- 1
   crit <- NULL
   crit_old <- sum(C * g(crossprod(Y) / N))
   a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
@@ -49,18 +51,20 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
       
       if (verbose) {
         cat(
-          " iter_inner: ", formatC(iter_inner, width = 3, format = "d"),
+          " iter: ", formatC(iter_total, width = 3, format = "d"),
           " Fit: ", formatC(crit[iter_inner], digits = 8, width = 10, format = "f"),
           " Dif: ", formatC(crit[iter_inner] - crit_old,
                             digits = 8, width = 10, format = "f"
-          ), "\n"
+          ),
+          " Mu: ", formatC(mu, digits = 8, width = 10, format = "d"),
+          "\n"
         )
       }
       
+      iter_total <- iter_total + 1
       a <- lapply(block_objects, "[[", "a")
       stopping_criteria_inner <- crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_inner, FALSE, FALSE))
       
-      if (verbose) print(paste("stop inner:", stopping_criteria_inner))
       if (any(stopping_criteria_inner < tol_inner) || (iter_inner > n_iter_max)) {
         break
       }
@@ -82,7 +86,6 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
     a_old_outer <- a_old_inner <- a
     iter_outer <- iter_outer + 1
     mu <- 2*mu + 1
-    if (verbose) print(paste("MU UPDATE:", mu))
   }
   
   if (iter_inner > n_iter_max) {
