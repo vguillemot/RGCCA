@@ -56,7 +56,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
           " Dif: ", formatC(crit[iter_inner] - crit_old,
                             digits = 8, width = 10, format = "f"
           ),
-          " Mu: ", formatC(mu, digits = 8, width = 10, format = "d"),
+          " Mu: ", formatC(mu, digits = 0, width = 10, format = "f"),
           "\n"
         )
       }
@@ -106,7 +106,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
     if (iter_outer <= n_iter_max) {
       message(
         "The RGCCA algorithm converged to a stationary point after ",
-        iter_outer - 1, " iterations \n"
+        iter_total - 1, " iterations \n"
       )
     }
     plot(crit, xlab = "iteration", ylab = "criteria")
