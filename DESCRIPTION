@@ -42,7 +42,8 @@ Imports:
     rlang,
     stats,
     Rcpp,
-    RcppEigen
+    RcppEigen,
+    Matrix
 LinkingTo:
     Rcpp,
     RcppEigen
