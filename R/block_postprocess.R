@@ -32,4 +32,8 @@ block_postprocess.sparse_block <- function(x, ctrl) {
   NextMethod()
 }
 
-block_postprocess.graphnet_block <- block_postprocess.block
+#' @export
+block_postprocess.graphnet_block <- function(x, ctrl) {
+    # To add things if necessary
+    NextMethod()
+}
