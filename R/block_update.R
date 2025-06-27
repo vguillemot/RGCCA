@@ -20,7 +20,7 @@ block_update.graphnet_block <- function(x, grad, mu) {
     if (is.null(x$mu) || mu != x$mu) {
       x$mu = mu
       #LDLTsolver_compute(x$graph_laplacian$solver@pointer, 2*mu*diag(length(x$a)) + x$graph_laplacian$L)
-      compute(x$graph_laplacian, 2*mu*diag(length(x$a)) + x$graph_laplacian$L)
+      compute(x$graph_laplacian, 2*mu*diag(length(x$a)) + 2*x$graph_laplacian$L)
     }
   #x$a <- LDLTsolver_solve(x$graph_laplacian$solver@pointer, a_grad + mu*block_project(x)$a)
   x$a <- solve(x$graph_laplacian, a_grad + mu*block_project(x)$a)
