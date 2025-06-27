@@ -466,10 +466,7 @@ check_laplacians <- function(laplacians, blocks) {
             stop_rgcca("all non NULL elements of graph_laplacians",
               "should be either regular or sparse matrices")
           }
-          if (!is.sparseMatrix(laplacians[[i]])) {
-              stop_rgcca("dense laplacians are not yet supported")
-          }
-          if (class(laplacians[[i]])=="ddiMatrix") {
+          if (class(laplacians[[i]])[1]=="ddiMatrix") {
               laplacians[[i]] <- as(laplacians[[i]], "dgCMatrix")
           }
           if (ncol(laplacians[[i]])!=nrow(laplacians[[i]])) {
