@@ -29,16 +29,25 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   
   iter_outer <- 1
   iter_total <- 1
-  crit <- NULL
-  crit_old <- sum(C * g(crossprod(Y) / N))
-  a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
   mu <- mu_init
+  crit <- NULL
+  lap_idx = which(sapply(block_objects, function(bl) class(bl)[1])=="graphnet_block")
+  lapsum = sum(sapply(block_objects[lap_idx],
+                    function(bl) {
+                      as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)
+                    }))
+  projsum = sum(sapply(block_objects[lap_idx],
+                    function(bl) {
+                      proj = block_project(bl)
+                      norm(bl$a - bl$a_L1, "2")^2 + norm(bl$a - bl$a_L2, "2")^2
+                    }))
+  crit_old <- sum(C * g(crossprod(Y) / N)) - lapsum - mu*projsum/2
+  a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
   
   repeat{  
     iter_inner <- 1
-    crit <- NULL
-    crit_old <- sum(C * g(crossprod(Y) / N))
-    repeat {
+    #crit <- NULL
+    repeat { 
       for (j in seq_along(A)) {
         # Compute grad
         grad <- Y %*% (C[j, ] * dg(crossprod(Y, Y[, j]) / N))
@@ -47,21 +56,38 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
       }
       
       # Print out intermediate fit
-      crit <- c(crit, sum(C * g(crossprod(Y) / N)))
+      #print(sapply(block_objects[lap_idx], function(bl)))
+      lapsum = sum(sapply(block_objects[lap_idx],
+                          function(bl) {
+                            as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)
+                          }))
+      projsum = sum(sapply(block_objects[lap_idx],
+                          function(bl) {
+                            proj = block_project(bl)
+                            norm(bl$a - proj$a_L1, "2")^2 +
+                                norm(bl$a - proj$a_L2, "2")^2
+                          }))
+      #print(projsum)
+      #print(lapsum)
+      crit <- c(crit, sum(C * g(crossprod(Y) / N)) - lapsum - mu*projsum/2)
+      #print(crit[iter_total])
+      #print(crit_old)
       
       if (verbose) {
         cat(
           " iter: ", formatC(iter_total, width = 3, format = "d"),
-          " Fit: ", formatC(crit[iter_inner], digits = 8, width = 10, format = "f"),
-          " Dif: ", formatC(crit[iter_inner] - crit_old,
+          " Fit: ", formatC(crit[iter_total], digits = 8, width = 10, format = "f"),
+          " Dif: ", formatC(crit[iter_total] - crit_old,
                             digits = 8, width = 10, format = "f"
           ),
           " Mu: ", formatC(mu, digits = 0, width = 10, format = "f"),
           "\n"
         )
       }
-      
+
+      crit_old <- crit[iter_total]
       iter_total <- iter_total + 1
+      
       a <- lapply(block_objects, "[[", "a")
       stopping_criteria_inner <- crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_inner, FALSE, FALSE))
       
@@ -69,7 +95,6 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
         break
       }
       
-      crit_old <- crit[iter_inner]
       a_old_inner <- a
       iter_inner <- iter_inner + 1
     }
@@ -82,7 +107,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
       break
     }
     
-    crit_old <- crit[iter_inner]
+    #crit_old <- crit[iter_inner]
     a_old_outer <- a_old_inner <- a
     iter_outer <- iter_outer + 1
     mu <- 2*mu + 1
