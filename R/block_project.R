@@ -61,8 +61,11 @@ block_project.graphnet_block <- function(x) {
     x$a_L1 <- projL1(x$a, x$const)$x
   }
   
-  if (any(x$a != 0)) {
-    x$a_L2 <- x$a / norm(x$a, type = "2")
+  l2_norm <- norm(x$a, type="2")
+  if (any(x$a != 0) & l2_norm > 1) {
+    x$a_L2 <- x$a / l2_norm
+  } else {
+    x$a_L2 <- x$a
   }
   
   x$a <- x$a_L1 + x$a_L2

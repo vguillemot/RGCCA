@@ -16,7 +16,7 @@ setMethod("initialize", "LDLTdense", function(.Object, ...) {
 })
 
 new_laplacian = function(L, lambda) {
-    l <- list(L=lambda*L)
+    l <- list(L=lambda*L, L_orig=L, lambda=lambda)
     class(l) <- "laplacian"
     if(is.sparseMatrix(L)) {
         l$solver = new("LDLTsparse")
