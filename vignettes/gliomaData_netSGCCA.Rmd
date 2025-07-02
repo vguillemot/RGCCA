@@ -1,0 +1,266 @@
+---
+title: "Analyse de GliomaData avec NetSGCCA"
+output: html_notebook
+---
+
+# Le jeu de données Glioma data
+GliomaData est un jeu de données multi-omique sur les gliomes malins pédiatriques, provenant de Gustave Roussy via le Dr Jacques GRILL. Il y a 53 observations sur 2 modalités (Gene expression - GE et copy number - CGH). L'objectif est de prédire la localisation de la tumeur : supratentorielle (cort), infratentorielle (dipg) ou ligne médiane (midl).
+
+```{r glioma data, echo=T, eval=TRUE}
+library(gliomaData)
+data(ge_cgh_locIGR)
+
+summary(ge_cgh_locIGR)
+summary(ge_cgh_locIGR$multiblocks)
+summary(ge_cgh_locIGR$ylabel)
+
+lapply(ge_cgh_locIGR$multiblocks, dim)
+```
+
+Les performances de prédictions ont été évaluées pour SGCCA dans l'article Tenenhaus et al. (2014). Le but de ce script est de tester la méthode netSGCCA, qui applique une contrainte graphNet sur un ou plusieurs blocs, de manière à ce que les variables proches dans le graphe aient des poids similaires dans le modèle. Sont-elles de prédiction sont-elles au moins équivalentes ? L'interprétabilité du modèle le plus performant est-elle améliorée ?
+
+## Annotation des sondes microarray du bloc GE
+```{r}
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("hgug4112a.db")  # Agilent 44 K Whole Human Genome Array G4112F
+
+library(hgug4112a.db)
+
+# Exemple de probes
+probes <- colnames(ge_cgh_locIGR$multiblocks$GE)
+
+# Vérifie si ces probes sont bien sur la plateforme
+
+mapped_genes <- AnnotationDbi::select(
+  hgug4112a.db,
+  keys = probes,
+  columns = c("SYMBOL"),
+  keytype = "PROBEID"
+)
+
+print(mapped_genes)
+
+```
+# Gestion des sondes sans SYMBOL
+
+```{r}
+mapped_genes_unique <- mapped_genes[!duplicated(mapped_genes$PROBEID),]
+rownames(mapped_genes_unique) <- mapped_genes_unique$PROBEID
+colnames(ge_cgh_locIGR$multiblocks$GE) <- mapped_genes_unique[colnames(ge_cgh_locIGR$multiblocks$GE), "SYMBOL"]
+
+ge_cgh_locIGR$multiblocks$GE <- ge_cgh_locIGR$multiblocks$GE[, !is.na(colnames(ge_cgh_locIGR$multiblocks$GE))]
+
+mapped_genes_unique_na <- mapped_genes_unique[!is.na(mapped_genes_unique$SYMBOL),]
+
+```
+
+
+## chargement de String, mapping des gènes et gestion des doublons dans String DB
+Pour ce premier test, on choisit un "petit" graphe mais quand même réaliste : String. La contrainte graphe est appliquée uniquement sur le bloc GE.
+```{r}
+# BiocManager::install("STRINGdb")
+
+library(STRINGdb)
+string_db <- STRINGdb$new(version="11.5", species=9606, score_threshold=900) # 400 = mild evidence, 700 = strong evidence
+
+mapped <- string_db$map(mapped_genes_unique_na, "SYMBOL", removeUnmappedRows=TRUE)
+head(mapped)
+
+filtered <- mapped[mapped$SYMBOL %in% colnames(ge_cgh_locIGR$multiblocks$GE),]
+
+interactions <- string_db$get_interactions(filtered$STRING_id)
+head(interactions)
+
+id2sym <- setNames(mapped$SYMBOL, mapped$STRING_id)
+
+# Ajout des SYMBOLs dans les colonnes d’interactions
+interactions$from_symbol <- id2sym[interactions$from]
+interactions$to_symbol   <- id2sym[interactions$to]
+
+# Supprimer les auto-interactions entre isoformes d’un même gène
+interactions <- interactions[interactions$from_symbol != interactions$to_symbol, ]
+
+# Créer un data.frame d’interactions symbol–symbol, en agrégant les doublons
+library(dplyr)
+
+symbol_edges <- interactions %>%
+  group_by(from_symbol, to_symbol) %>%
+  summarise(weight = sum(combined_score), .groups = "drop")  # ou sum(score) si tu as un score
+
+# (Optionnel) ordonner pour éviter les doublons inversés
+symbol_edges <- symbol_edges %>%
+  rowwise() %>%
+  mutate(
+    gene1 = min(from_symbol, to_symbol),
+    gene2 = max(from_symbol, to_symbol)
+  ) %>%
+  group_by(gene1, gene2) %>%
+  summarise(weight = sum(weight), .groups = "drop")
+
+
+```
+
+# Création du graphe et gestion des doublons, le cas échéant
+
+```{r}
+library(igraph)
+
+# Créer un graphe igraph à partir des interactions
+g <- graph_from_data_frame(
+  d = symbol_edges[, c("gene1", "gene2")],
+  directed = FALSE
+)
+
+# Assigner les noms visibles
+V(g)$label <- V(g)$name # les noms sont déjà des symbols
+
+# Fusionner les nœuds ayant le même gène symbol
+# g_merged <- contract(
+#   g,
+#   mapping = as.numeric(as.factor(V(g)$name)),  # groupe par symbol
+#   vertex.attr.comb = list(
+#     name = function(x) unique(x)[1],        # garder un nom
+#     symbol = function(x) unique(x)[1],      # garder le symbole
+#     label = function(x) unique(x)[1],       # pour affichage
+#     "ignore"                                # ignorer les autres attributs
+#   )
+# )
+
+# Simplifier les arêtes : combiner les arêtes multiples
+# g_merged <- simplify(g_merged, remove.loops = TRUE, edge.attr.comb = "sum")
+
+
+# plot(g_merged,
+#      vertex.label = V(g)$label,
+#      vertex.size = 5,
+#      vertex.label.cex = 0.8,
+#      vertex.label.color = "black",
+#      main = "Réseau gène-gène (SYMBOLs)")
+
+write_graph(g, file = "gene_network.graphml", format = "graphml")
+```
+
+
+# Gestion des singletons
+Les singletons ne sont pas dans le graphe car celui-ci est construit à partir des interactions. Les dimensions du bloc GE et du laplacien ne correspondent donc pas. Pour l'instant, on choisit de supprimer les singletons du bloc GE. Nous verrons ensuite comment les gérer.
+```{r}
+my_genes <- intersect(colnames(ge_cgh_locIGR$multiblocks$GE), V(g)$label)
+my_genes_2 <- intersect(V(g)$label, colnames(ge_cgh_locIGR$multiblocks$GE))
+
+mini_GE <- ge_cgh_locIGR$multiblocks$GE[, my_genes]
+my_mapped_genes <- mapped_genes_unique_na[mapped_genes_unique_na$SYMBOL %in% my_genes, ]
+
+maxi_GE <- ge_cgh_locIGR$multiblocks$GE
+ge_cgh_locIGR$multiblocks$GE <- mini_GE
+
+```
+
+
+# Calcul du Laplacian
+
+```{r}
+L = laplacian_matrix(g, )
+graph_laplacians=list(L, NULL, NULL)
+
+```
+
+# Fit netSGCCA
+
+```{r}
+library(devtools)
+
+#load_all("/env/cnrgh/proj/math_stats/scratch/gloaguen/graph_multiblox/RGCCA/R/.")
+devtools::load_all("~/gits/RGCCA")
+
+blocks = list(rna=ge_cgh_locIGR$multiblocks$GE, cnv=ge_cgh_locIGR$multiblocks$CGH, loc=ge_cgh_locIGR$multiblocks$y)
+design = matrix(1, 3, 3)
+diag(design) = 0
+lambda=c(0.5, 0, 0)
+s = c(0.1, 0.3, 1)
+# diverges
+fit.sgcca <- rgcca(blocks = blocks, 
+                   ncomp = 1,
+                   connection=design,
+                   response = 3,
+                   sparsity = s,
+                   verbose = TRUE,
+                   lambda=lambda,
+                   graph_laplacians = graph_laplacians,
+                   mu_init=1, woodburry=FALSE, ranks=NULL)
+
+plot(fit.sgcca, type="samples", response = as.factor(ge_cgh_locIGR$ylabel))
+
+```
+
+
+# Afficher le réseau des gènes sélectionnés
+
+```{r}
+source(file = "~/gits/RGCCA/utils/get_clean_string_network.R")
+
+# Afficher le graphe des gènes sélectionnés
+hist(log10(abs(fit.sgcca$a$rna)), n=100)
+select_genes <-  fit.sgcca$a$rna[abs(fit.sgcca$a$rna) > 10^-6,]
+
+# res_g <- get_clean_string_network(data.frame(SYMBOL=names(select_genes)))
+res_g <- induced_subgraph(g, vids = names(select_genes)) # on extrait le sous-graphe des gènes sélectionnés
+subg <- induced_subgraph(res_g, vids = V(res_g)[degree(res_g)>0]) # on supprime les singletons
+
+plot(res_g,
+     vertex.label = V(res_g)$name,
+     vertex.size = 5,
+     vertex.label.cex = 0.8,
+     vertex.label.color = "black",
+     main = "Réseau gène-gène (SYMBOLs) sélectionnés par netSGCCA")
+
+write_graph(g, file = "glioma_data_netSGCCA_gene_network.graphml", format = "graphml")
+
+```
+
+# Performance de classification du modèle
+
+```{r}
+library(caret)
+
+n_folds = 1
+inTrain <- createDataPartition(y=ge_cgh_locIGR$ylabel, p=0.75, list = F, times = n_folds)
+
+my_blocks <- list(GE = ge_cgh_locIGR$multiblocks$GE, CGH = ge_cgh_locIGR$multiblocks$CGH, LOC = ge_cgh_locIGR$ylabel)
+
+training <- NULL
+testing <- NULL
+fit.sgcca <- NULL
+predict.sgcca <- NULL
+predict.val.sgcca <- NULL
+
+
+for(i in 1:n_folds){
+  training[[i]] <- lapply(my_blocks, function(b) b[inTrain[, i],])
+  testing[[i]] <- lapply(my_blocks, function(b) b[-inTrain[, i],])
+  cv_out[[i]] <- rgcca_cv(blocks = training[[i]], 
+                                   ncomp = 1,
+                                   connection=design,
+                                   response = 3,
+                                   par_type = "sparsity",
+                                   par_length = 5,
+                                   verbose = TRUE,
+                                   prediction_model = "lda",
+                                   lambda=lambda,
+                                   graph_laplacians = graph_laplacians,
+                                   mu_init=1, woodburry=FALSE, ranks=NULL)
+  
+  fit.sgcca[[i]] <- rgcca(cv_out[[i]])
+  predict.val.sgcca[[i]] <- rgcca_predict(rgcca_res=fit.sgcca[[i]],
+                                   blocks_test = testing[[i]],
+                                   prediction_model = "lda",
+                                   metric="Accuracy"
+  )
+}
+
+print(predict.val.sgcca)
+
+
+```
+
