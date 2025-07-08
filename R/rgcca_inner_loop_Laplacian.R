@@ -31,24 +31,20 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   iter_total <- 1
   mu <- mu_init
   crit <- NULL
-  lap_idx = which(sapply(block_objects, function(bl) class(bl)[1])=="graphnet_block")
-  lapsum = sum(sapply(block_objects[lap_idx],
-                    function(bl) {
-                      as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)
-                    }))
-  projsum = sum(sapply(block_objects[lap_idx],
-                    function(bl) {
-                      proj = block_project(bl)
-                      norm(bl$a - proj$a_L1, "2")^2 +
-                          norm(bl$a - proj$a_L2, "2")^2
-                    }))
-  crit_old <- sum(C * g(crossprod(Y) / N)) - lapsum - mu*projsum/2
-  #crit_old <- sum(C * g(crossprod(Y) / N))
+  lap_idx <- which(sapply(block_objects, function(bl) class(bl)[1])=="graphnet_block")
+  laplacian_crit = sum(sapply(block_objects[lap_idx],
+    function(bl) as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)))
+  projection_crit = sum(sapply(block_objects[lap_idx],
+    function(bl) {
+      proj = block_project(bl)
+      norm(bl$a - proj$a_L1, "2")^2 + norm(bl$a - proj$a_L2, "2")^2
+    }))
+  rgcca_crit <- sum(C * g(crossprod(Y) / N))
+  crit_old <- rgcca_crit - laplacian_crit - mu*projection_crit/2
   a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
   
   repeat{  
     iter_inner <- 1
-    #crit <- NULL
     repeat { 
       for (j in seq_along(A)) {
         # Compute grad
@@ -57,22 +53,23 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
         Y[, j] <- block_objects[[j]]$Y
       }
       
-      lapsum = sum(sapply(block_objects[lap_idx],
-                          function(bl) {
-                            as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)
-                          }))
-      projsum = sum(sapply(block_objects[lap_idx],
-                          function(bl) {
-                            proj = block_project(bl)
-                            norm(bl$a - proj$a_L1, "2")^2 +
-                                norm(bl$a - proj$a_L2, "2")^2
-                          }))
-      crit <- c(crit, sum(C * g(crossprod(Y) / N)) - lapsum - mu*projsum/2)
+      laplacian_crit = sum(sapply(block_objects[lap_idx],
+        function(bl) as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)))
+      projection_crit = sum(sapply(block_objects[lap_idx],
+        function(bl) {
+          proj = block_project(bl)
+          norm(bl$a - proj$a_L1, "2")^2 + norm(bl$a - proj$a_L2, "2")^2
+        }))
+      rgcca_crit <- sum(C * g(crossprod(Y)/ N))
+      crit <- c(crit, rgcca_crit - laplacian_crit - mu*projection_crit/2)
       
       if (verbose) {
         cat(
           " iter: ", formatC(iter_total, width = 3, format = "d"),
-          " Fit: ", formatC(crit[iter_total], digits = 8, width = 10, format = "f"),
+          " RGCCA Fit: ", formatC(rgcca_crit, digits = 8, width = 10,
+                            format = "f"),
+          " Fit: ", formatC(crit[iter_total], digits = 8, width = 10,
+                            format = "f"),
           " Dif: ", formatC(crit[iter_total] - crit_old,
                             digits = 8, width = 10, format = "f"
           ),
