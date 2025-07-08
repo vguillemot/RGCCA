@@ -467,7 +467,7 @@ check_laplacians <- function(laplacians, blocks) {
               "should be either regular or sparse matrices")
           }
           if (class(laplacians[[i]])[1]=="ddiMatrix") {
-              laplacians[[i]] <- as(laplacians[[i]], "dgCMatrix")
+              laplacians[[i]] <- as(laplacians[[i]], "CsparseMatrix")
           }
           if (ncol(laplacians[[i]])!=nrow(laplacians[[i]])) {
               stop_rgcca("every laplacian should be a square matrix")
