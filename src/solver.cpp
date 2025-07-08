@@ -1,29 +1,25 @@
-#include <RcppEigen.h>
 // [[Rcpp::depends(RcppEigen)]]
 
-// find how to use them to simplify code
-typedef Eigen::SparseMatrix<int> laplacian;
-typedef Eigen::SimplicialLDLT<laplacian> LDLTsolver;
+#include "RGCCA_types.h"
 
 //============================================================================
 //Sparse solver
 //============================================================================
 
 // [[Rcpp::export]]
-Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> LDLTsparse_new() {
-    Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>>
-        ptr (new Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>(), true);
+Rcpp::XPtr<EigenSparseSolver> EigenSparseSolver_new() {
+    Rcpp::XPtr<EigenSparseSolver> ptr (new EigenSparseSolver, true);
     return ptr;
 }
 
 // [[Rcpp::export]]
-void LDLTsparse_compute(Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> ptr,
-        const Eigen::SparseMatrix<double>& L) {
+void EigenSparseSolver_compute(Rcpp::XPtr<EigenSparseSolver> ptr,
+        const EigenSparseMatrix& L) {
     ptr->compute(L);
 }
 
 // [[Rcpp::export]]
-Eigen::VectorXd LDLTsparse_solve(Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>> ptr,
+Eigen::VectorXd EigenSparseSolver_solve(Rcpp::XPtr<EigenSparseSolver> ptr, 
         const Eigen::VectorXd& b) {
     return ptr->solve<Eigen::VectorXd>(b);
 }
@@ -33,20 +29,19 @@ Eigen::VectorXd LDLTsparse_solve(Rcpp::XPtr<Eigen::SimplicialLDLT<Eigen::SparseM
 //============================================================================
 
 // [[Rcpp::export]]
-Rcpp::XPtr<Eigen::LDLT<Eigen::MatrixXd>> LDLTdense_new() {
-    Rcpp::XPtr<Eigen::LDLT<Eigen::MatrixXd>>
-        ptr (new Eigen::LDLT<Eigen::MatrixXd>(), true);
+Rcpp::XPtr<EigenDenseSolver> EigenDenseSolver_new() {
+    Rcpp::XPtr<EigenDenseSolver> ptr (new EigenDenseSolver, true);
     return ptr;
 }
 
 // [[Rcpp::export]]
-void LDLTdense_compute(Rcpp::XPtr<Eigen::LDLT<Eigen::MatrixXd>> ptr,
+void EigenDenseSolver_compute(Rcpp::XPtr<EigenDenseSolver> ptr,
         const Eigen::MatrixXd& L) {
     ptr->compute(L);
 }
 
 // [[Rcpp::export]]
-Eigen::VectorXd LDLTdense_solve(Rcpp::XPtr<Eigen::LDLT<Eigen::MatrixXd>> ptr,
+Eigen::VectorXd EigenDenseSolver_solve(Rcpp::XPtr<EigenDenseSolver> ptr,
         const Eigen::VectorXd& b) {
     return ptr->solve<Eigen::VectorXd>(b);
 }
