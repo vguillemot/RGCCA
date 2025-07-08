@@ -57,8 +57,6 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
         Y[, j] <- block_objects[[j]]$Y
       }
       
-      # Print out intermediate fit
-      #print(sapply(block_objects[lap_idx], function(bl)))
       lapsum = sum(sapply(block_objects[lap_idx],
                           function(bl) {
                             as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)
@@ -69,11 +67,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
                             norm(bl$a - proj$a_L1, "2")^2 +
                                 norm(bl$a - proj$a_L2, "2")^2
                           }))
-      #print(norm(block_objects[[1]]$a, "2"))
       crit <- c(crit, sum(C * g(crossprod(Y) / N)) - lapsum - mu*projsum/2)
-      #crit <- c(crit, sum(C * g(crossprod(Y) / N)))
-      #print(crit[iter_total])
-      #print(crit_old)
       
       if (verbose) {
         cat(
