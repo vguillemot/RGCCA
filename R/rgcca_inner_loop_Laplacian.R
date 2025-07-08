@@ -39,9 +39,11 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   projsum = sum(sapply(block_objects[lap_idx],
                     function(bl) {
                       proj = block_project(bl)
-                      norm(bl$a - bl$a_L1, "2")^2 + norm(bl$a - bl$a_L2, "2")^2
+                      norm(bl$a - proj$a_L1, "2")^2 +
+                          norm(bl$a - proj$a_L2, "2")^2
                     }))
   crit_old <- sum(C * g(crossprod(Y) / N)) - lapsum - mu*projsum/2
+  #crit_old <- sum(C * g(crossprod(Y) / N))
   a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
   
   repeat{  
@@ -50,7 +52,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
     repeat { 
       for (j in seq_along(A)) {
         # Compute grad
-        grad <- Y %*% (C[j, ] * dg(crossprod(Y, Y[, j]) / N))
+        grad <- (2/N)*Y %*% (C[j, ] * dg(crossprod(Y, Y[, j]) / N))
         block_objects[[j]] <- block_update(block_objects[[j]], grad, mu)
         Y[, j] <- block_objects[[j]]$Y
       }
@@ -67,9 +69,9 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
                             norm(bl$a - proj$a_L1, "2")^2 +
                                 norm(bl$a - proj$a_L2, "2")^2
                           }))
-      #print(projsum)
-      #print(lapsum)
+      #print(norm(block_objects[[1]]$a, "2"))
       crit <- c(crit, sum(C * g(crossprod(Y) / N)) - lapsum - mu*projsum/2)
+      #crit <- c(crit, sum(C * g(crossprod(Y) / N)))
       #print(crit[iter_total])
       #print(crit_old)
       
