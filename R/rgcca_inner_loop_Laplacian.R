@@ -31,24 +31,27 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   iter_total <- 1
   mu <- mu_init
   crit <- NULL
-  lap_idx <- which(sapply(block_objects, function(bl) class(bl)[1])=="graphnet_block")
-  laplacian_crit = sum(sapply(block_objects[lap_idx],
-    function(bl) as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)))
-  projection_crit = sum(sapply(block_objects[lap_idx],
-    function(bl) {
-      proj = block_project(bl)
-      norm(bl$a - proj$a_L1, "2")^2 + norm(bl$a - proj$a_L2, "2")^2
-    }))
-  rgcca_crit <- sum(C * g(crossprod(Y) / N))
-  crit_old <- rgcca_crit - laplacian_crit - mu*projection_crit/2
-  a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
+  mu_changes <- NULL
+  lap_idx <- which(sapply(block_objects,
+    function(bl) class(bl)[1])=="graphnet_block")
   
   repeat{  
+    laplacian_crit = sum(sapply(block_objects[lap_idx],
+      function(bl) as.numeric(t(bl$a)%*%bl$graph_laplacians$L%*%bl$a)))
+    projection_crit = sum(sapply(block_objects[lap_idx],
+      function(bl) {
+        proj = block_project(bl)
+        norm(bl$a - proj$a_L1, "2")^2 + norm(bl$a - proj$a_L2, "2")^2
+      }))
+    rgcca_crit <- sum(C * g(crossprod(Y) / N))
+    crit_old <- rgcca_crit - laplacian_crit - mu*projection_crit/2
+    crit_old_inner <- crit_old
+    a_old_inner <- a_old_outer <- lapply(block_objects, "[[", "a")
     iter_inner <- 1
     repeat { 
       for (j in seq_along(A)) {
         # Compute grad
-        grad <- (2/N)*Y %*% (C[j, ] * dg(crossprod(Y, Y[, j]) / N))
+        grad <- (2/N) * Y %*% (C[j, ] * dg(crossprod(Y, Y[, j]) / N))
         block_objects[[j]] <- block_update(block_objects[[j]], grad, mu)
         Y[, j] <- block_objects[[j]]$Y
       }
@@ -70,7 +73,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
                             format = "f"),
           " Fit: ", formatC(crit[iter_total], digits = 8, width = 10,
                             format = "f"),
-          " Dif: ", formatC(crit[iter_total] - crit_old,
+          " Dif: ", formatC(crit[iter_total] - crit_old_inner,
                             digits = 8, width = 10, format = "f"
           ),
           " Mu: ", formatC(mu, digits = 0, width = 10, format = "f"),
@@ -78,25 +81,31 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
         )
       }
 
-      crit_old <- crit[iter_total]
-      iter_total <- iter_total + 1
       
       a <- lapply(block_objects, "[[", "a")
-      stopping_criteria_inner <- crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_inner, FALSE, FALSE))
-      
+      stopping_criteria_inner <- c(
+        drop(crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_inner, FALSE, FALSE))),
+        abs(crit[iter_total] - crit_old_inner)
+      )
+
       if (any(stopping_criteria_inner < tol_inner) || (iter_inner > n_iter_max)) {
         break
       }
-      
+
+      crit_old_inner <- crit[iter_total]
       a_old_inner <- a
+      iter_total <- iter_total + 1
       iter_inner <- iter_inner + 1
     }
     
-    stopping_criteria_outer <- crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_outer, FALSE, FALSE))
+    stopping_criteria_outer <- c(
+      drop(crossprod(unlist(a, FALSE, FALSE) - unlist(a_old_outer, FALSE, FALSE))),
+      abs(crit[iter_total] - crit_old)
+    )
+    
+    iter_total <- iter_total + 1
 
     if (any(stopping_criteria_outer < tol_outer) || (iter_outer > n_iter_max)) {
-      #if (flag1) print("tolerance")
-      #if (flag2) print("iterations")
       break
     }
     
@@ -104,6 +113,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
     a_old_outer <- a_old_inner <- a
     iter_outer <- iter_outer + 1
     mu <- 2*mu + 1
+    mu_changes <- c(mu_changes, iter_total)
   }
   
   if (iter_inner > n_iter_max) {
@@ -128,6 +138,8 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
       )
     }
     plot(crit, xlab = "iteration", ylab = "criteria")
+    abline(v=mu_changes, lty="dashed")
+    #legend("bottomleft", legend="Changes of mu", lty="dashed")
   }
   
   # Post-process the resulting block-weight and block-component vectors
