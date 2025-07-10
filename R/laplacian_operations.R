@@ -40,7 +40,7 @@ compute.laplacian_sparse <- function(l, A) {
 
 #' @export
 compute.laplacian_dense <- function(l, A) {
-  EigenDenseSolver_solve(l$solver@pointer, A)
+  EigenDenseSolver_compute(l$solver@pointer, A)
     
 }
 
