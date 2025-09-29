@@ -484,7 +484,8 @@ rgcca <- function(blocks, connection = NULL, tau = 1, ncomp = 1,
 
   if (!is.null(rgcca_args$graph_laplacians)) {
     for (i in seq_along(rgcca_args$graph_laplacians)) {
-      if (!is.null(rgcca_args$graph_laplacians[[i]])) {
+      if (!is.null(rgcca_args$graph_laplacians[[i]])
+          & !("laplacian" %in% class(rgcca_args$graph_laplacians[[i]]))) {
         rgcca_args$graph_laplacians[[i]] = new_laplacian(
           rgcca_args$graph_laplacians[[i]], rgcca_args$lambda[i]
         )
