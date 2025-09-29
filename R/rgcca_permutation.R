@@ -235,7 +235,9 @@ rgcca_permutation <- function(blocks, par_type = "tau", par_value = NULL,
                               response = NULL, superblock = FALSE,
                               NA_method = "na.ignore", rgcca_res = NULL,
                               verbose = TRUE, n_iter_max = 1000,
-                              comp_orth = TRUE) {
+                              comp_orth = TRUE, lambda=0, mu_init=1,
+                              graph_laplacians=NULL, tol_inner=1e-04,
+                              tol_outer=1e-08) {
   ### Try to retrieve parameters from a rgcca object
   rgcca_args <- as.list(environment())
   tmp <- get_rgcca_args(blocks, rgcca_args)
