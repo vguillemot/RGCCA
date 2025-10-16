@@ -29,7 +29,12 @@ rgcca_permutation(
   rgcca_res = NULL,
   verbose = TRUE,
   n_iter_max = 1000,
-  comp_orth = TRUE
+  comp_orth = TRUE,
+  lambda = 0,
+  mu_init = 1,
+  graph_laplacians = NULL,
+  tol_inner = 1e-04,
+  tol_outer = 1e-08
 )
 }
 \arguments{

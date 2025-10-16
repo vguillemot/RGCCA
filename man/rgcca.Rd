@@ -30,9 +30,7 @@ rgcca(
   n_iter_max = 1000,
   comp_orth = TRUE,
   A = NULL,
-  C = NULL,
-  ranks = NULL,
-  woodburry = TRUE
+  C = NULL
 )
 }
 \arguments{

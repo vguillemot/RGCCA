@@ -34,6 +34,11 @@ rgcca_cv(
   verbose = TRUE,
   n_iter_max = 1000,
   comp_orth = TRUE,
+  lambda = 0,
+  graph_laplacians = NULL,
+  mu_init = 1,
+  tol_inner = 1e-04,
+  tol_outer = 1e-08,
   ...
 )
 }
