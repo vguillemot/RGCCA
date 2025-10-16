@@ -219,7 +219,7 @@ rgcca_cv <- function(blocks,
   check_integer("par_length", par_length)
   check_integer("n_run", n_run)
   check_integer("k", k, min = 2)
-  match.arg(par_type, c("tau", "sparsity", "ncomp"))
+  match.arg(par_type, c("tau", "sparsity", "ncomp", "lambda"))
   match.arg(validation, c("loo", "kfold"))
 
   default_metric <- ifelse(model$classification, "Accuracy", "RMSE")
@@ -235,6 +235,9 @@ rgcca_cv <- function(blocks,
   } else if (par_type == "sparsity") {
     rgcca_args$method <- "sgcca"
     opt$param <- "sparsity"
+  } else if (par_type == "lambda"){
+    rgcca_args$method <- "netsgcca"
+    opt$param <- "sparsity"
   }
 
   param <- set_parameter_grid(
@@ -242,6 +245,10 @@ rgcca_cv <- function(blocks,
     rgcca_args[[par_type]], rgcca_args$response, FALSE, opt$disjunction
   )
   
+  if (param$par_type == "lambda"){
+    param$par_value[, which(sapply(rgcca_args$graph_laplacians, is.null))] = 0
+  }
+
   # Generate a warning if tau has not been fully specified for a block that
   # has more columns than samples and remove tau = 0 configuration
   n <- NROW(rgcca_args$blocks[[1]])

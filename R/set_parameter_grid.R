@@ -41,14 +41,20 @@ set_parameter_grid <- function(par_type, par_length, par_value, blocks,
   }
 
   set_grid <- function(check_function, min_values, max_values,
-                       response_value = NULL) {
+                       response_value = NULL, par_seq) {
     # If par_value is null, we generate a matrix with par_length rows
     # by taking values uniformly spaced between the min of possible
     # values and the max of possible values for each block.
     if (is.null(par_value)) {
-      par_value <- lapply(seq_along(blocks), function(j) {
-        seq(max_values, min_values[j], length.out = par_length)
-      })
+      if(is.null(par_seq)){
+        par_value <- lapply(seq_along(blocks), function(j) {
+          seq(max_values, min_values[j], length.out = par_length)
+        }) 
+      } else if (par_seq == "log"){
+        par_value <- lapply(seq_along(blocks), function(j) {
+          c(0, exp(seq(log(max_values), log(min_values[j]), length.out = par_length-1)))
+        })
+      }
       par_value <- do.call(cbind, par_value)
       par_value <- set_response_value(par_value, response_value)
       return(list(par_type = par_type, par_value = par_value))
@@ -58,9 +64,20 @@ set_parameter_grid <- function(par_type, par_length, par_value, blocks,
     # of valid numbers.
     if (is.vector(par_value)) {
       par_value <- check_function(par_value)
-      par_value <- lapply(seq_along(par_value), function(j) {
-        seq(par_value[j], min_values[j], length.out = par_length)
-      })
+      if(is.null(par_seq)){
+        par_value <- lapply(seq_along(par_value), function(j) {
+          seq(par_value[j], min_values[j], length.out = par_length)
+        })
+      } else if (par_seq == "log"){
+        par_value <- lapply(seq_along(par_value), function(j) {
+          if (par_value[j] <= 0){
+            rep(0, par_length)
+          } else {
+            c(0, exp(seq(log(par_value[j]), 
+                         log(min_values[j]), length.out = par_length-1)))
+          }
+        })
+      }
       par_value <- do.call(cbind, par_value)
       par_value <- set_response_value(par_value, response_value)
       return(list(par_type = par_type, par_value = par_value))
@@ -77,6 +94,7 @@ set_parameter_grid <- function(par_type, par_length, par_value, blocks,
   J <- length(blocks)
   check_param_type(par_value, blocks)
   ncols <- vapply(blocks, NCOL, FUN.VALUE = integer(1))
+  par_seq <- NULL
 
   switch(par_type,
     "ncomp" = {
@@ -113,19 +131,21 @@ set_parameter_grid <- function(par_type, par_length, par_value, blocks,
       }
     },
     "lambda" = {
-      min_values <- rep(0, J+1)
-      max_values <- 1e6
+      min_values <- rep(1e-6, J+1)
+      max_values <- 1
       response_value <- function(x) {
         ifelse(disjunction, 0, x[response])
       }
       check_function <- function(x) {
         check_penalty(x, blocks, method = "netsgcca", superblock = superblock)
       }
+      par_seq = "log"
     }
   )
   if (is.null(response)) response_value <- NULL
 
-  param <- set_grid(check_function, min_values, max_values, response_value)
+  param <- set_grid(check_function, min_values, max_values, response_value, 
+                    par_seq)
 
   if (par_type == "ncomp") {
     param$par_value <- round(param$par_value)

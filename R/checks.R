@@ -346,9 +346,10 @@ check_penalty <- function(penalty, blocks, method = "rgcca", superblock = FALSE,
       },
       FUN.VALUE = double(1L)
     )
-    if (method == "netsgcca") {
-      #TODO
-    }
+  }
+  if (method == "netsgcca") {
+    penalty <- unlist(lapply(penalty, function(lambda) 
+      check_integer("lambda", lambda, float = TRUE, min = 0, max = Inf)))
   }
   
   if (is_matrix) penalty <- matrix(penalty, DIM[1], DIM[2])
