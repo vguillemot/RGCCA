@@ -31,5 +31,5 @@ g <- c(1, 1, 2)
 normL1(x) # = 1.6
 normL2(x) # ~= 1.12
 normLG(x, g) # ~= 1.5
-normalizeL2(x)
+
 }
