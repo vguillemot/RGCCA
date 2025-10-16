@@ -31,6 +31,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
   iter_total <- 1
   mu <- mu_init
   crit <- NULL
+  rgcca_crit_list <- NULL
   mu_changes <- NULL
   lap_idx <- which(sapply(block_objects,
     function(bl) class(bl)[1])=="graphnet_block")
@@ -64,6 +65,7 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
           norm(bl$a - proj$a_L1, "2")^2 + norm(bl$a - proj$a_L2, "2")^2
         }))
       rgcca_crit <- sum(C * g(crossprod(Y)/ N))
+      rgcca_crit_list <- c(rgcca_crit_list, rgcca_crit)
       crit <- c(crit, rgcca_crit - laplacian_crit - mu*projection_crit/2)
       
       if (verbose) {
@@ -137,7 +139,10 @@ rgcca_inner_loop_Laplacian <- function(A, C, g, dg, tau = rep(1, length(A)),
         iter_total - 1, " iterations \n"
       )
     }
-    plot(crit, xlab = "iteration", ylab = "criteria")
+    par(mfrow=c(1, 2))
+    plot(crit, xlab = "iteration", ylab = "Total criteria")
+    abline(v=mu_changes, lty="dashed")
+    plot(rgcca_crit_list, xlab="iteration", ylab="RGCCA criteria")
     abline(v=mu_changes, lty="dashed")
     #legend("bottomleft", legend="Changes of mu", lty="dashed")
   }
