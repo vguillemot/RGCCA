@@ -241,7 +241,7 @@ rgcca_cv <- function(blocks,
     par_type, par_length, par_value, rgcca_args$blocks,
     rgcca_args[[par_type]], rgcca_args$response, FALSE, opt$disjunction
   )
-
+  
   # Generate a warning if tau has not been fully specified for a block that
   # has more columns than samples and remove tau = 0 configuration
   n <- NROW(rgcca_args$blocks[[1]])

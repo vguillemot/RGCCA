@@ -111,6 +111,16 @@ set_parameter_grid <- function(par_type, par_length, par_value, blocks,
       check_function <- function(x) {
         check_penalty(x, blocks, method = "sgcca", superblock = superblock)
       }
+    },
+    "lambda" = {
+      min_values <- rep(0, J+1)
+      max_values <- 1e6
+      response_value <- function(x) {
+        ifelse(disjunction, 0, x[response])
+      }
+      check_function <- function(x) {
+        check_penalty(x, blocks, method = "netsgcca", superblock = superblock)
+      }
     }
   )
   if (is.null(response)) response_value <- NULL
