@@ -62,10 +62,10 @@ block_project.graphnet_block <- function(x) {
   }
   
   l2_norm <- norm(x$a, type="2")
-  if (any(x$a != 0) & l2_norm > 1) {
+  if (l2_norm != 0) {
     x$a_L2 <- x$a / l2_norm
   } else {
-    x$a_L2 <- x$a
+    stop("Block weight vector is completely null")
   }
   
   x$a <- x$a_L1 + x$a_L2
