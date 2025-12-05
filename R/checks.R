@@ -466,20 +466,22 @@ check_laplacians <- function(laplacians, blocks) {
   #}
   for (i in seq_along(laplacians)) {
     if (!is.null(laplacians[[i]])) {
-      if (!check_matrix(laplacians[[i]])){
-        stop_rgcca("all non NULL elements of graph_laplacians",
-                   "should be either regular or sparse matrices")
-      }
-      if (class(laplacians[[i]])[1]=="ddiMatrix") {
-        laplacians[[i]] <- as(laplacians[[i]], "CsparseMatrix")
-      }
-      if (ncol(laplacians[[i]])!=nrow(laplacians[[i]])) {
-        stop_rgcca("every laplacian should be a square matrix")
-      }
-      if(ncol(laplacians[[i]])!=ncol(blocks[[i]])) {
-        print(ncol(laplacians[[i]]))
-        print(ncol(blocks[[i]]))
-        stop_rgcca("Laplacians must have the same number of columns as their corresponding blocks")
+      if (!is.list(laplacians[[i]])){
+        if (!check_matrix(laplacians[[i]])){
+          stop_rgcca("all non NULL elements of graph_laplacians",
+                     "should be either regular or sparse matrices")
+        }
+        if (class(laplacians[[i]])[1]=="ddiMatrix") {
+          laplacians[[i]] <- as(laplacians[[i]], "CsparseMatrix")
+        }
+        if (ncol(laplacians[[i]])!=nrow(laplacians[[i]])) {
+          stop_rgcca("every laplacian should be a square matrix")
+        }
+        if(ncol(laplacians[[i]])!=ncol(blocks[[i]])) {
+          print(ncol(laplacians[[i]]))
+          print(ncol(blocks[[i]]))
+          stop_rgcca("Laplacians must have the same number of columns as their corresponding blocks")
+        }
       }
     }
   }

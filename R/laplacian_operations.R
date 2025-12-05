@@ -4,23 +4,31 @@ setClass("EigenSparseSolver", slots=c(pointer="externalptr"))
 setClass("EigenDenseSolver", slots=c(pointer="externalptr"))
 
 setMethod("initialize", "EigenSparseSolver", function(.Object, ...) {
-    #.Object@pointer <- .Call(LDLTsolver_method("new"), ...)
-    .Object@pointer <- EigenSparseSolver_new()
-    .Object
+  #.Object@pointer <- .Call(LDLTsolver_method("new"), ...)
+  .Object@pointer <- EigenSparseSolver_new()
+  .Object
 })
 
 setMethod("initialize", "EigenDenseSolver", function(.Object, ...) {
-    #.Object@pointer <- .Call(LDLTsolver_method("new"), ...)
-    .Object@pointer <- EigenDenseSolver_new()
-    .Object
+  #.Object@pointer <- .Call(LDLTsolver_method("new"), ...)
+  .Object@pointer <- EigenDenseSolver_new()
+  .Object
 })
 
 new_laplacian = function(L, lambda, woodbury = TRUE) {
+  if(is.list(L)){
+    if(L$filtered){
+      l        = list(L=lambda*L$L, lambda=lambda, vectors = L$vectors, values = L$values)
+      class(l) = c("laplacian_woodbury", "laplacian")
+    } else{
+      error("Not done yet")
+    }
+  } else {
     l <- list(L=lambda*L, L_orig=L, lambda=lambda)
     class(l) <- "laplacian"
     if(is.sparseMatrix(L)) {
-        l$solver = new("EigenSparseSolver")
-        class(l) = c("laplacian_sparse", class(l))
+      l$solver = new("EigenSparseSolver")
+      class(l) = c("laplacian_sparse", class(l))
     } else if (woodbury) {
       class(l)          = c("laplacian_woodbury", class(l))
       eig               = eigen(l$L_orig)
@@ -31,7 +39,8 @@ new_laplacian = function(L, lambda, woodbury = TRUE) {
       l$solver = new("EigenDenseSolver")
       class(l) = c("laplacian_dense", class(l))
     }
-    return(l)
+  }
+  return(l)
 }
 
 compute <- function(l, A) {
@@ -41,7 +50,7 @@ compute <- function(l, A) {
 #' @export
 compute.laplacian_sparse <- function(l, A) {
   EigenSparseSolver_compute(l$solver@pointer, A)
-    
+  
 }
 
 #' @export
@@ -56,11 +65,11 @@ compute.laplacian_woodbury <- function(l, A) {
 #' @export
 compute.laplacian_dense <- function(l, A, mu) {
   EigenDenseSolver_compute(l$solver@pointer, A)
-    
+  
 }
 
 solve <- function(l, b) {
-    UseMethod("solve")
+  UseMethod("solve")
 }
 
 #' @export
